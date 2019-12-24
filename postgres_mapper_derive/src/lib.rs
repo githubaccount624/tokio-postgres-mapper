@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate syn;
 
-use proc_macro::TokenStream;
+use syn::proc_macro::TokenStream;
 use quote::Tokens;
 
 use syn::DeriveInput;
