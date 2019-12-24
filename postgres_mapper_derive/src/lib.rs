@@ -17,9 +17,7 @@ use syn::{Fields, Ident};
 pub fn postgres_mapper(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
 
-    impl_derive(&ast)
-        .parse()
-        .expect("Error parsing postgres mapper tokens")
+    impl_derive(&ast).parse().expect("Error parsing postgres mapper tokens")
 }
 
 fn impl_derive(ast: &DeriveInput) -> Tokens {

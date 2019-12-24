@@ -69,35 +69,11 @@
 //! `postgres-mapper-derive` has 3 features that can be enabled (where T is the
 //! struct being derived with the provided `PostgresMapper` proc-macro):
 //!
-//! - `postgres-support`, which derives
-//! `impl<'a> From<::postgres::row::Row<'a>> for T` and
-//! `impl<'a> From<&'a ::postgres::Row<'a>> for T` implementations
-//! - `tokio-postgres-support`, which derives
 //! `impl From<::tokio_postgres::row::Row> for T` and
 //! `impl From<&::tokio_postgres::row::Row> for T` implementations
 //! - `postgres-mapper` which, for each of the above features, implements
 //! `postgres-mapper`'s `FromPostgresRow` and/or `FromTokioPostgresRow` traits
 //!
-//! `postgres-mapper` has two features, `postgres-support` and
-//! `tokio-postgres-support`. When one is enabled in `postgres-mapper-derive`, it
-//! must also be enabled in `postgres-mapper`.
-//!
-//! ### Installation
-//!
-//! The above might be confusing, so here's an example where `tokio-postgres` is
-//! enabled in both crates:
-//!
-//! Add the following to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies.postgres-mapper]
-//! features = ["tokio-postgres-support"]
-//! git = "https://github.com/zeyla/postgres-mapper"
-//!
-//! [dependencies.postgres-mapper-derive]
-//! features = ["postgres-mapper", "tokio-postgres-support"]
-//! git = "https://github.com/zeyla/postgres-mapper"
-//! ```
 //!
 //! This will derive implementations for converting from owned and referenced
 //! `tokio-postgres::row::Row`s, as well as implementing `postgres-mapper`'s
