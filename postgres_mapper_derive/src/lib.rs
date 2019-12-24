@@ -37,11 +37,7 @@ fn impl_derive(ast: &DeriveInput) -> Tokens {
 
     impl_tokio_from_row(&mut tokens, &ast.ident, &fields);
     impl_tokio_from_borrowed_row(&mut tokens, &ast.ident, &fields);
-
-    #[cfg(feature = "postgres-mapper")]
-    {
-        impl_tokio_postgres_mapper(&mut tokens, &ast.ident, &fields);
-    }
+    impl_tokio_postgres_mapper(&mut tokens, &ast.ident, &fields);
 
     tokens
 }
