@@ -53,10 +53,7 @@ impl From<::tokio_postgres::row::Row> for {struct_name} {{
             {0}: row.get(\"{0}\"),", ident));
     }
 
-    t.append("
-        }
-    }
-}");
+    t.append("}}}");
 }
 
 fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
@@ -72,10 +69,7 @@ impl<'a> From<&'a ::tokio_postgres::row::Row> for {struct_name} {{
             {0}: row.get(\"{0}\"),", ident));
     }
 
-    t.append("
-        }
-    }
-}");
+    t.append("}}}");
 }
 
 
@@ -97,11 +91,9 @@ impl ::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
             {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
-    t.append("
-        })
-    }
+    t.append("})}");
 
-    fn from_tokio_postgres_row_ref(row: &::tokio_postgres::row::Row)
+    t.append("fn from_tokio_postgres_row_ref(row: &::tokio_postgres::row::Row)
         -> Result<Self, ::postgres_mapper::Error> {
         Ok(Self {");
 
@@ -112,10 +104,5 @@ impl ::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
             {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
-    t.append("
-        })
-    }");
-
-    t.append("
-}");
+    t.append("})}}");
 }
