@@ -1,0 +1,24 @@
+[package]
+authors = ["Zeyla Hellyer <hi@zeyla.me>"]
+description = "Postgres struct mapper proc-macro."
+documentation = "https://docs.rs/postgres-mapper-derive"
+homepage = "https://github.com/githubaccount624/postgres-mapper"
+keywords = ["postgres", "mapper"]
+license = "ISC"
+name = "postgres-mapper-derive"
+repository = "https://github.com/githubaccount624/postgres-mapper.git"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "0.3"
+syn = "0.15"
+
+[features]
+default = []
+postgres-mapper = []
+postgres-support = []
+tokio-postgres-support = []

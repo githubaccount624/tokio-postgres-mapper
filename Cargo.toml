@@ -1,0 +1,17 @@
+[package]
+authors = ["Zeyla Hellyer <hi@zeyla.me>"]
+description = "Struct mapping for postgres."
+documentation = "https://docs.rs/postgres-mapper"
+homepage = "https://github.com/zeyla/postgres-mapper"
+keywords = ["postgres", "mapper"]
+license = "ISC"
+name = "postgres-mapper"
+repository = "https://github.com/zeyla/postgres-mapper.git"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+doctest = false
+
+[dependencies]
+tokio-postgres = "0.5"
