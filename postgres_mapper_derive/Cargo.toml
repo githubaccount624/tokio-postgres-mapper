@@ -1,12 +1,12 @@
 [package]
-authors = ["Zeyla Hellyer <hi@zeyla.me>"]
+authors = ["Asdf"]
 description = "Postgres struct mapper proc-macro."
 documentation = "https://docs.rs/postgres-mapper-derive"
-homepage = "https://github.com/githubaccount624/postgres-mapper"
-keywords = ["postgres", "mapper"]
+homepage = "https://github.com/githubaccount624/tokio-postgres-mapper"
+keywords = ["tokio", "postgres", "mapper"]
 license = "ISC"
-name = "postgres-mapper-derive"
-repository = "https://github.com/githubaccount624/postgres-mapper.git"
+name = "tokio-postgres-mapper-derive"
+repository = "https://github.com/githubaccount624/tokio-postgres-mapper"
 version = "0.1.0"
 edition = "2018"
 
