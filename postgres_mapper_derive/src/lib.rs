@@ -1,5 +1,3 @@
-extern crate quote;
-extern crate proc_macro;
 #[macro_use]
 extern crate syn;
 
@@ -21,16 +19,12 @@ pub fn postgres_mapper(input: TokenStream) -> TokenStream {
 }
 
 fn impl_derive(ast: &DeriveInput) -> Tokens {
-    #[allow(unused_mut)]
     let mut tokens = Tokens::new();
 
-    #[allow(unused_variables)]
     let fields: &Fields = match ast.data {
-        Struct(ref s) => {
-            &s.fields
-        },
-        Enum(ref u) => {panic!("Enums can not be mapped")},
-        Union(ref u) => {panic!("Unions can not be mapped")},
+        Struct(ref s) => { &s.fields },
+        Enum(ref u) => { panic!("Enums can not be mapped") },
+        Union(ref u) => { panic!("Unions can not be mapped") },
     };
 
     impl_tokio_from_row(&mut tokens, &ast.ident, &fields);
@@ -41,67 +35,54 @@ fn impl_derive(ast: &DeriveInput) -> Tokens {
 }
 
 fn impl_tokio_from_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("
-impl From<::tokio_postgres::row::Row> for {struct_name} {{
-    fn from(row: ::tokio_postgres::row::Row) -> Self {{
-        Self {{", struct_name=struct_ident));
+    t.append(format!("impl From<::tokio_postgres::row::Row> for {struct_name} {{
+                          fn from(row: ::tokio_postgres::row::Row) -> Self {{
+                              Self {{", struct_name=struct_ident));
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.get(\"{0}\"),", ident));
+        t.append(format!("{0}: row.get(\"{0}\"),", ident));
     }
 
     t.append("}}}");
 }
 
 fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("
-impl<'a> From<&'a ::tokio_postgres::row::Row> for {struct_name} {{
-    fn from(row: &'a ::tokio_postgres::row::Row) -> Self {{
-        Self {{", struct_name=struct_ident));
+    t.append(format!("impl<'a> From<&'a ::tokio_postgres::row::Row> for {struct_name} {{
+                          fn from(row: &'a ::tokio_postgres::row::Row) -> Self {{
+                              Self {{", struct_name=struct_ident));
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.get(\"{0}\"),", ident));
+        t.append(format!("{0}: row.get(\"{0}\"),", ident));
     }
 
     t.append("}}}");
 }
 
 
-fn impl_tokio_postgres_mapper(
-    t: &mut Tokens,
-    struct_ident: &Ident,
-    fields: &Fields,
-) {
-    t.append(format!("
-impl ::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
-    fn from_tokio_postgres_row(row: ::tokio_postgres::row::Row)
-        -> Result<Self, ::postgres_mapper::Error> {{
-        Ok(Self {{", struct_name=struct_ident));
+fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
+    t.append(format!("impl ::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
+                          fn from_tokio_postgres_row(row: ::tokio_postgres::row::Row) -> Result<Self, ::postgres_mapper::Error> {{
+                              Ok(Self {{", struct_name=struct_ident));
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
     t.append("})}");
 
-    t.append("fn from_tokio_postgres_row_ref(row: &::tokio_postgres::row::Row)
-        -> Result<Self, ::postgres_mapper::Error> {
-        Ok(Self {");
+    t.append("fn from_tokio_postgres_row_ref(row: &::tokio_postgres::row::Row) -> Result<Self, ::postgres_mapper::Error> {
+                  Ok(Self {");
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
     t.append("})}}");

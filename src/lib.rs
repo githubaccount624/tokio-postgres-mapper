@@ -1,6 +1,6 @@
-//! # postgres-mapper
+//! # tokio-postgres-mapper
 //!
-//! `postgres-mapper` is a proc-macro designed to make mapping from postgresql
+//! `tokio-postgres-mapper` is a proc-macro designed to make mapping from postgresql
 //! tables to structs simple.
 //!
 //! ### Why?
@@ -11,8 +11,6 @@
 //! For example, this might be what someone would normally write:
 //!
 //! ```rust
-//! extern crate postgres;
-//!
 //! use postgres::row::Row;
 //!
 //! pub struct User {
@@ -42,10 +40,10 @@
 //! implementations are derived:
 //!
 //! ```rust
-//! #[macro_use] extern crate postgres_mapper_derive;
-//! extern crate postgres_mapper;
+//! #[macro_use] extern crate tokio_postgres_mapper_derive;
+//! use tokio_postgres_mapper;
 //!
-//! use postgres_mapper::FromPostgresRow;
+//! use tokio_postgres_mapper::FromPostgresRow;
 //!
 //! #[derive(PostgresMapper)]
 //! pub struct User {
@@ -56,8 +54,8 @@
 //!
 //! // code to execute a query here and get back a row
 //!
-//! // `postgres_mapper::FromPostgresRow`'s methods do not panic and return a Result
-//! let user = User::from_postgres_row(row)?;
+//! // `tokio_postgres_mapper::FromPostgresRow`'s methods do not panic and return a Result
+//! let user = User::from(row)?;
 //! ```
 //!
 //! ### The two crates
