@@ -48,7 +48,6 @@ extern crate tokio_postgres_mapper;
 use tokio_postgres_mapper::FromPostgresRow;
 
 #[derive(PostgresMapper)]
-#[pg_mapper(table = "user")]
 pub struct User {
     pub id: i64,
     pub name: String,
