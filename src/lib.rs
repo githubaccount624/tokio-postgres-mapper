@@ -129,6 +129,7 @@ pub trait FromTokioPostgresRow: Sized {
 pub enum Error {
     /// A column in a row was not found.
     ColumnNotFound,
+    TokioPostgresError,
     /// An error from the `tokio-postgres` crate while converting a type.
     Conversion(Box<dyn StdError + Send + Sync>),
 }
@@ -149,7 +150,14 @@ impl StdError for Error {
     fn description(&self) -> &str {
         match *self {
             Error::ColumnNotFound => "Column in row not found",
+            Error::TokioPostgresError => "Tokio Postgres Error",
             Error::Conversion(ref inner) => inner.description(),
         }
+    }
+}
+
+impl From<tokio_postgres::error::Error> for Error {
+    fn from(_err: tokio_postgres::error::Error) -> Self {
+        Error::TokioPostgresError
     }
 }
