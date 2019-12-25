@@ -13,6 +13,8 @@ use syn::Data::*;
 
 use syn::{Fields, Ident};
 
+use crate::postgres_mapper;
+
 #[proc_macro_derive(PostgresMapper, attributes(pg_mapper))]
 pub fn postgres_mapper(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -64,42 +66,27 @@ fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &F
     t.append("}}}");
 }
 
-fn impl_tokio_postgres_mapper(
-    t: &mut Tokens,
-    struct_ident: &Ident,
-    fields: &Fields,
-) {
-    t.append(format!("
-impl ::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
-    fn from_tokio_postgres_row(row: ::tokio_postgres::row::Row)
-        -> Result<Self, ::postgres_mapper::Error> {{
-        Ok(Self {{", struct_name=struct_ident));
+fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
+    t.append(format!("impl crate::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
+                          fn from_tokio_postgres_row(row: crate::tokio_postgres::row::Row) -> Result<Self, crate::postgres_mapper::Error> {{
+                              Ok(Self {{", struct_name=struct_ident));
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
-    t.append("
-        })
-    }
-    fn from_tokio_postgres_row_ref(row: &::tokio_postgres::row::Row)
-        -> Result<Self, ::postgres_mapper::Error> {
-        Ok(Self {");
+    t.append("})}");
+
+    t.append("fn from_tokio_postgres_row_ref(row: &crate::tokio_postgres::row::Row) -> Result<Self, crate::postgres_mapper::Error> {
+                  Ok(Self {");
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("
-            {0}: row.try_get(\"{0}\")?.ok_or_else(|| ::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
-    t.append("
-        })
-    }");
-
-    t.append("
-}");
+    t.append("})}}");
 }
