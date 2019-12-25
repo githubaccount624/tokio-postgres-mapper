@@ -31,7 +31,7 @@ fn impl_derive(ast: &DeriveInput) -> Tokens {
 
     impl_tokio_from_row(&mut tokens, &ast.ident, &fields);
     impl_tokio_from_borrowed_row(&mut tokens, &ast.ident, &fields);
-    impl_tokio_postgres_mapper(&mut tokens, &ast.ident, &fields);
+    // impl_tokio_postgres_mapper(&mut tokens, &ast.ident, &fields);
 
     tokens
 }
@@ -64,6 +64,7 @@ fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &F
     t.append("}}}");
 }
 
+/*
 fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
     t.append(format!("impl crate::tokio_postgres_mapper::FromTokioPostgresRow for {struct_name} {{
                           fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {{
@@ -88,3 +89,4 @@ fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fie
 
     t.append("})}}");
 }
+*/
