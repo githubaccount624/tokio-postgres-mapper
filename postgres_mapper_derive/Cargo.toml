@@ -16,9 +16,3 @@ proc-macro = true
 [dependencies]
 quote = "0.3"
 syn = "0.15"
-
-[features]
-default = []
-postgres-mapper = []
-postgres-support = []
-tokio-postgres-support = []
