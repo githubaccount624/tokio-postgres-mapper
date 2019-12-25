@@ -65,25 +65,25 @@ fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &F
 }
 
 fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl crate::postgres_mapper::FromTokioPostgresRow for {struct_name} {{
-                          fn from_tokio_postgres_row(row: crate::tokio_postgres::row::Row) -> Result<Self, crate::postgres_mapper::Error> {{
+    t.append(format!("impl crate::tokio_postgres_mapper::FromTokioPostgresRow for {struct_name} {{
+                          fn from_tokio_postgres_row(row: crate::tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {{
                               Ok(Self {{", struct_name=struct_ident));
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::tokio_postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
     t.append("})}");
 
-    t.append("fn from_tokio_postgres_row_ref(row: &crate::tokio_postgres::row::Row) -> Result<Self, crate::postgres_mapper::Error> {
+    t.append("fn from_tokio_postgres_row_ref(row: &crate::tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {
                   Ok(Self {");
 
     for field in fields {
         let ident = field.ident.clone().expect("Expected structfield identifier");
 
-        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::postgres_mapper::Error::ColumnNotFound)?,", ident));
+        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::tokio_postgres_mapper::Error::ColumnNotFound)?,", ident));
     }
 
     t.append("})}}");
