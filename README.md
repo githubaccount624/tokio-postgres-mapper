@@ -1,6 +1,6 @@
-# postgres-mapper
+# tokio-postgres-mapper
 
-`postgres-mapper` is a proc-macro designed to make mapping from postgresql
+`tokio_postgres-mapper` is a proc-macro designed to make mapping from postgresql
 tables to structs simple.
 
 ### Why?
@@ -42,10 +42,10 @@ Using this crate, the boilerplate is removed, and panicking and non-panicking
 implementations are derived:
 
 ```rust
-#[macro_use] extern crate postgres_mapper_derive;
-extern crate postgres_mapper;
+#[macro_use] extern crate tokio_postgres_mapper_derive;
+extern crate tokio_postgres_mapper;
 
-use postgres_mapper::FromPostgresRow;
+use tokio_postgres_mapper::FromPostgresRow;
 
 #[derive(PostgresMapper)]
 #[pg_mapper(table = "user")]
@@ -56,23 +56,10 @@ pub struct User {
 }
 
 // Code to execute a query here and get back a row might now look like:
-let stmt = "SELECT {$1} FROM {$2}
-    WHERE username = {$3} AND password = {$4}";
+let stmt = "SELECT * FROM user WHERE username = $1 AND password = $2";
 
-let rows = &self
-    .conn
-    .query(
-        stmt,
-        &[&User::sql_fields(), &User::sql_table(), username, pass],
-    ).unwrap();
-
-let user = rows
-    .iter()
-    .next()
-    .map(|row|
-      // `postgres_mapper::FromPostgresRow`'s methods do not panic and return a Result
-      User::from_postgres_row(row)?
-    );
+let user = client.query_one(stmt, &[&5, "asdf"]).await?;
+let user = User::from(user);
 
 ```
 
@@ -91,12 +78,12 @@ struct being derived with the provided `PostgresMapper` proc-macro):
 - `tokio-postgres-support`, which derives
 `impl From<::tokio_postgres::rows::Row> for T` and
 `impl From<&::tokio_postgres::rows::Row> for T` implementations
-- `postgres-mapper` which, for each of the above features, implements
-`postgres-mapper`'s `FromPostgresRow` and/or `FromTokioPostgresRow` traits
+- `tokio-postgres-mapper` which, for each of the above features, implements
+`tokio-postgres-mapper`'s `FromPostgresRow` and/or `FromTokioPostgresRow` traits
 
-`postgres-mapper` has two features, `postgres-support` and
-`tokio-postgres-support`. When one is enabled in `postgres-mapper-derive`, it
-must also be enabled in `postgres-mapper`.
+`tokio-postgres-mapper` has two features, `postgres-support` and
+`tokio-postgres-support`. When one is enabled in `tokio-postgres-mapper-derive`, it
+must also be enabled in `tokio-postgres-mapper`.
 
 ### Installation
 
@@ -116,7 +103,7 @@ git = "https://github.com/zeyla/postgres-mapper"
 ```
 
 This will derive implementations for converting from owned and referenced
-`tokio-postgres::rows::Row`s, as well as implementing `postgres-mapper`'s
+`tokio-postgres::rows::Row`s, as well as implementing `tokio-postgres-mapper`'s
 `FromTokioPostgresRow` trait for non-panicking conversions.
 
 ### License
