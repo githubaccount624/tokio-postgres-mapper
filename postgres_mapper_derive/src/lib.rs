@@ -13,8 +13,6 @@ use syn::Data::*;
 
 use syn::{Fields, Ident};
 
-use crate::postgres_mapper;
-
 #[proc_macro_derive(PostgresMapper, attributes(pg_mapper))]
 pub fn postgres_mapper(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
