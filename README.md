@@ -87,19 +87,11 @@ must also be enabled in `tokio-postgres-mapper`.
 
 ### Installation
 
-The above might be confusing, so here's an example where `tokio-postgres` is
-enabled in both crates:
-
 Add the following to your `Cargo.toml`:
 
 ```toml
-[dependencies.postgres-mapper]
-features = ["tokio-postgres-support"]
-git = "https://github.com/zeyla/postgres-mapper"
-
-[dependencies.postgres-mapper-derive]
-features = ["postgres-mapper", "tokio-postgres-support"]
-git = "https://github.com/zeyla/postgres-mapper"
+tokio-postgres-mapper = { git = "https://github.com/githubaccount624/tokio-postgres-mapper" }
+tokio-postgres-mapper-derive = { git = "https://github.com/githubaccount624/tokio-postgres-mapper" }
 ```
 
 This will derive implementations for converting from owned and referenced
