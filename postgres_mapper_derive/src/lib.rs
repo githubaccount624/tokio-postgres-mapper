@@ -37,8 +37,8 @@ fn impl_derive(ast: &DeriveInput) -> Tokens {
 }
 
 fn impl_tokio_from_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl From<::tokio_postgres::row::Row> for {struct_name} {{
-                          fn from(row: crate::tokio_postgres::row::Row) -> Self {{
+    t.append(format!("impl From<tokio_postgres::row::Row> for {struct_name} {{
+                          fn from(row: tokio_postgres::row::Row) -> Self {{
                               Self {{", struct_name=struct_ident));
 
     for field in fields {
@@ -51,8 +51,8 @@ fn impl_tokio_from_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
 }
 
 fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl<'a> From<&'a crate::tokio_postgres::row::Row> for {struct_name} {{
-                          fn from(row: &'a crate::tokio_postgres::row::Row) -> Self {{
+    t.append(format!("impl<'a> From<&'a tokio_postgres::row::Row> for {struct_name} {{
+                          fn from(row: &'a tokio_postgres::row::Row) -> Self {{
                               Self {{", struct_name=struct_ident));
 
     for field in fields {
@@ -66,7 +66,7 @@ fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &F
 
 fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
     t.append(format!("impl crate::tokio_postgres_mapper::FromTokioPostgresRow for {struct_name} {{
-                          fn from_tokio_postgres_row(row: crate::tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {{
+                          fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {{
                               Ok(Self {{", struct_name=struct_ident));
 
     for field in fields {
@@ -77,7 +77,7 @@ fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fie
 
     t.append("})}");
 
-    t.append("fn from_tokio_postgres_row_ref(row: &crate::tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {
+    t.append("fn from_tokio_postgres_row_ref(row: &tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {
                   Ok(Self {");
 
     for field in fields {
