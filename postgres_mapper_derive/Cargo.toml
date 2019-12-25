@@ -16,3 +16,4 @@ proc-macro = true
 [dependencies]
 quote = "0.3"
 syn = "0.15"
+tokio-postgres = "0.5"
