@@ -28,8 +28,8 @@ fn impl_derive(ast: &mut DeriveInput) -> TokenStream {
 
     let from_row = impl_tokio_from_row(s, name, &impl_generics, &ty_generics, &where_clause);
 
-    // let tokio_postgres_mapper =
-    //     impl_tokio_postgres_mapper(s, name, impl_generics, ty_generics, where_clause);
+    let tokio_postgres_mapper =
+        impl_tokio_postgres_mapper(s, name, impl_generics, ty_generics, where_clause);
 
     let mut g = ast.generics.clone();
 
@@ -44,7 +44,7 @@ fn impl_derive(ast: &mut DeriveInput) -> TokenStream {
     let tokens = quote! {
         #from_row
         #from_row_borrowed
-        // #tokio_postgres_mapper
+        #tokio_postgres_mapper
     };
 
     tokens.into()
@@ -108,39 +108,40 @@ fn impl_tokio_from_row_ref(
     syn::parse_quote!(#tokens)
 }
 
-// fn impl_tokio_postgres_mapper(
-//     s: &DataStruct,
-//     name: &Ident,
-//     impl_generics: &ImplGenerics,
-//     ty_generics: &TypeGenerics,
-//     where_clause: &Option<&WhereClause>,
-// ) -> Item {
-//     let fields = s.fields.iter().map(|field| {
-//         let ident = field.ident.as_ref().unwrap();
+fn impl_tokio_postgres_mapper(
+    s: &DataStruct,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    ty_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> Item {
+    let fields = s.fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
+        let ty = &field.ty;
 
-//         let row_expr = format!(r##"{}"##, ident);
-//         quote! {
-//             #ident:row.try_get(#row_expr)?.ok_or_else(|| tokio_postgres_mapper::Error::ColumnNotFound)?
-//         }
-//     });
+        let row_expr = format!(r##"{}"##, ident);
+        quote! {
+            #ident:row.try_get::<&str,#ty>(#row_expr)?
+        }
+    });
 
-//     let fields_copy = fields.clone();
+    let fields_copy = fields.clone();
 
-//     let tokens = quote! {
-//         impl #impl_generics tokio_postgres_mapper::FromTokioPostgresRow for #name #ty_generics #where_clause {
-//             fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
-//                 Ok(Self {
-//                     #(#fields),*
-//                 })
-//             }
+    let tokens = quote! {
+        impl #impl_generics tokio_postgres_mapper::FromTokioPostgresRow for #name #ty_generics #where_clause {
+            fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
+                Ok(Self {
+                    #(#fields),*
+                })
+            }
 
-//             fn from_tokio_postgres_row_ref(row: &tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
-//                 Ok(Self {
-//                     #(#fields_copy),*
-//                 })
-//             }
-//         }
-//     };
+            fn from_tokio_postgres_row_ref(row: &tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
+                Ok(Self {
+                    #(#fields_copy),*
+                })
+            }
+        }
+    };
 
-//     syn::parse_quote!(#tokens)
-// }
+    syn::parse_quote!(#tokens)
+}
