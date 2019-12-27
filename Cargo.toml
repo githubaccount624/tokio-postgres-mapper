@@ -15,3 +15,8 @@ doctest = false
 
 [dependencies]
 tokio-postgres = "0.5"
+tokio-postgres-mapper-derive = {optional = true,path="./postgres_mapper_derive"}
+
+
+[features]
+derive = ["tokio-postgres-mapper-derive"]

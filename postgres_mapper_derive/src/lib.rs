@@ -1,92 +1,147 @@
-extern crate quote;
 extern crate proc_macro;
 #[macro_use]
+extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
-use quote::Tokens;
 
-use syn::DeriveInput;
-use syn::Meta::{List, NameValue};
-use syn::NestedMeta::{Literal, Meta};
-use syn::Data::*;
-
-use syn::{Fields, Ident};
+use syn::{
+    Data, DataStruct, DeriveInput, GenericParam, Ident, ImplGenerics, Item, Lifetime, LifetimeDef,
+    TypeGenerics, WhereClause,
+};
 
 #[proc_macro_derive(PostgresMapper)]
 pub fn postgres_mapper(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
+    let mut ast: DeriveInput = syn::parse(input).expect("Couldn't parse item");
 
-    impl_derive(&ast).parse().expect("Error parsing postgres mapper tokens")
+    impl_derive(&mut ast)
 }
 
-fn impl_derive(ast: &DeriveInput) -> Tokens {
-    let mut tokens = Tokens::new();
+fn impl_derive(ast: &mut DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = &ast.generics.split_for_impl();
 
-    let fields: &Fields = match ast.data {
-        Struct(ref s) => { &s.fields },
-        Enum(ref u) => { panic!("Enums can not be mapped") },
-        Union(ref u) => { panic!("Unions can not be mapped") },
+    let s = match ast.data {
+        Data::Struct(ref s) => s,
+        _ => panic!("Enums or Unions can not be mapped"),
     };
 
-    impl_tokio_from_row(&mut tokens, &ast.ident, &fields);
-    impl_tokio_from_borrowed_row(&mut tokens, &ast.ident, &fields);
-    // impl_tokio_postgres_mapper(&mut tokens, &ast.ident, &fields);
+    let from_row = impl_tokio_from_row(s, name, &impl_generics, &ty_generics, &where_clause);
 
-    tokens
+    let tokio_postgres_mapper =
+        impl_tokio_postgres_mapper(s, name, impl_generics, ty_generics, where_clause);
+
+    let mut g = ast.generics.clone();
+
+    g.params.push(GenericParam::Lifetime(LifetimeDef::new(
+        syn::parse_str::<Lifetime>("'DERIVE").unwrap(),
+    )));
+    let (impl_generics, _, _) = { g.split_for_impl() };
+
+    let from_row_borrowed =
+        impl_tokio_from_row_ref(s, name, &impl_generics, ty_generics, where_clause);
+
+    let tokens = quote! {
+        #from_row
+        #from_row_borrowed
+        #tokio_postgres_mapper
+    };
+
+    tokens.into()
 }
 
-fn impl_tokio_from_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl From<tokio_postgres::row::Row> for {struct_name} {{
-                          fn from(row: tokio_postgres::row::Row) -> Self {{
-                              Self {{", struct_name=struct_ident));
+fn impl_tokio_from_row(
+    s: &DataStruct,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    ty_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> Item {
+    let fields = s.fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
 
-    for field in fields {
-        let ident = field.ident.clone().expect("Expected structfield identifier");
+        let row_expr = format!(r##"{}"##, ident);
+        quote! {
+            #ident:row.get(#row_expr)
+        }
+    });
 
-        t.append(format!("{0}: row.get(\"{0}\"),", ident));
-    }
+    let tokens = quote! {
+        impl #impl_generics From<tokio_postgres::row::Row> for #name #ty_generics #where_clause  {
+            fn from(row:tokio_postgres::row::Row) -> Self {
+                Self {
+                    #(#fields),*
+                }
+            }
+        }
+    };
 
-    t.append("}}}");
+    syn::parse_quote!(#tokens)
 }
 
-fn impl_tokio_from_borrowed_row(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl<'a> From<&'a tokio_postgres::row::Row> for {struct_name} {{
-                          fn from(row: &'a tokio_postgres::row::Row) -> Self {{
-                              Self {{", struct_name=struct_ident));
+fn impl_tokio_from_row_ref(
+    s: &DataStruct,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    ty_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> Item {
+    let fields = s.fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
 
-    for field in fields {
-        let ident = field.ident.clone().expect("Expected structfield identifier");
+        let row_expr = format!(r##"{}"##, ident);
+        quote! {
+            #ident:row.get(#row_expr)
+        }
+    });
 
-        t.append(format!("{0}: row.get(\"{0}\"),", ident));
-    }
+    let tokens = quote! {
+        impl #impl_generics From<&'DERIVE tokio_postgres::row::Row> for #name #ty_generics #where_clause {
+            fn from(row:&'DERIVE tokio_postgres::row::Row) -> Self {
+                Self {
+                    #(#fields),*
+                }
+            }
+        }
+    };
 
-    t.append("}}}");
+    syn::parse_quote!(#tokens)
 }
 
-/*
-fn impl_tokio_postgres_mapper(t: &mut Tokens, struct_ident: &Ident, fields: &Fields) {
-    t.append(format!("impl crate::tokio_postgres_mapper::FromTokioPostgresRow for {struct_name} {{
-                          fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {{
-                              Ok(Self {{", struct_name=struct_ident));
+fn impl_tokio_postgres_mapper(
+    s: &DataStruct,
+    name: &Ident,
+    impl_generics: &ImplGenerics,
+    ty_generics: &TypeGenerics,
+    where_clause: &Option<&WhereClause>,
+) -> Item {
+    let fields = s.fields.iter().map(|field| {
+        let ident = field.ident.as_ref().unwrap();
+        let ty = &field.ty;
 
-    for field in fields {
-        let ident = field.ident.clone().expect("Expected structfield identifier");
+        let row_expr = format!(r##"{}"##, ident);
+        quote! {
+            #ident:row.try_get::<&str,#ty>(#row_expr)?
+        }
+    });
 
-        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::tokio_postgres_mapper::Error::ColumnNotFound)?,", ident));
-    }
+    let fields_copy = fields.clone();
 
-    t.append("})}");
+    let tokens = quote! {
+        impl #impl_generics tokio_postgres_mapper::FromTokioPostgresRow for #name #ty_generics #where_clause {
+            fn from_tokio_postgres_row(row: tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
+                Ok(Self {
+                    #(#fields),*
+                })
+            }
 
-    t.append("fn from_tokio_postgres_row_ref(row: &tokio_postgres::row::Row) -> Result<Self, crate::tokio_postgres_mapper::Error> {
-                  Ok(Self {");
+            fn from_tokio_postgres_row_ref(row: &tokio_postgres::row::Row) -> Result<Self, tokio_postgres_mapper::Error> {
+                Ok(Self {
+                    #(#fields_copy),*
+                })
+            }
+        }
+    };
 
-    for field in fields {
-        let ident = field.ident.clone().expect("Expected structfield identifier");
-
-        t.append(format!("{0}: row.try_get(\"{0}\")?.ok_or_else(|| crate::tokio_postgres_mapper::Error::ColumnNotFound)?,", ident));
-    }
-
-    t.append("})}}");
+    syn::parse_quote!(#tokens)
 }
-*/
